@@ -4,21 +4,34 @@ const Schema = mongoose.Schema;
 const communityChatSchema = new Schema(
   {
     content: {
-      type: String
+      type: String,
     },
     sender: {
-      type: String
+      type: String,
     },
-    time: {
-      type: Date
-    }
-  }, {
-  autoIndex: false
-}, {
-  timestamps: true
-}
+    reciver: {
+      type: String,
+    },
+    senderId: {
+      type: Number,
+    },
+    reciverId: {
+      type: Number,
+    },
+seen:{type:Boolean},
+    created_at: {
+      type: Date,
+    },
+  },
+  {
+    autoIndex: false,
+  },
+  {
+    timestamps: true,
+  }
 );
 
 let communityChat = mongoose.model("communityChat", communityChatSchema);
 
 module.exports = communityChat;
+
