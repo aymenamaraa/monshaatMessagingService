@@ -25,9 +25,12 @@ app.get("/oldmessages/:authUser/:correspondant", cors(), (req, res) => {
       err ? res.end() : res.send(docs);
     });
 
-
   communityChat.updateMany(
-	 { seen: false, reciver: req.params.authUser },
+    {
+      seen: false,
+      reciver: req.params.authUser,
+      sender: req.params.correspondant,
+    },
     { $set: { seen: true } },
     { multi: true },
     (err, writeResult) => {
@@ -37,15 +40,14 @@ app.get("/oldmessages/:authUser/:correspondant", cors(), (req, res) => {
   );
 });
 
-
-app.get("/countUnseen/:authUser",cors(),(req,res)=>{
-
-communityChat.find({ $and:[{reciverId: req.params.authUser},{seen: false},]})
-			.exec((err, docs)=>{
-				if(err) console.log("db err", err)
-				else res.send({count: docs.length});
-					   })
-})
+app.get("/countUnseen/:authUser", cors(), (req, res) => {
+  communityChat
+    .find({ $and: [{ reciverId: req.params.authUser }, { seen: false }] })
+    .exec((err, docs) => {
+      if (err) console.log("db err", err);
+      else res.send({ count: docs.length });
+    });
+});
 
 app.get("/conversationHistory/:authUser", cors(), (req, res) => {
   console.log(req.params.authUser);
@@ -70,14 +72,14 @@ app.get("/conversationHistory/:authUser", cors(), (req, res) => {
           if (item.senderId == parseInt(req.params.authUser))
             c = [
               ...c,
-             {
+              {
                 id: item.reciverId,
                 complete_name: item.reciver,
-               seen:true,
-             },
+                seen: true,
+              },
             ];
           else
-           c = [
+            c = [
               ...c,
               {
                 id: item.senderId,
@@ -87,20 +89,20 @@ app.get("/conversationHistory/:authUser", cors(), (req, res) => {
             ];
         });
         //const listInt = new Set(c.map(x => x.id));
-      //  correspondants = [...listInt];
- 
-             const map = new Map();
+        //  correspondants = [...listInt];
+
+        const map = new Map();
         for (const item of c) {
-            if(!map.has(item.id)){
-                map.set(item.id, true);    // set any value to Map
-                correspondants.push({
-                    id: item.id,
-                    complete_name: item.complete_name,
-                    seen: item.seen,
-                });
-            }
+          if (!map.has(item.id)) {
+            map.set(item.id, true); // set any value to Map
+            correspondants.push({
+              id: item.id,
+              complete_name: item.complete_name,
+              seen: item.seen,
+            });
+          }
         }
- res.send(correspondants);
+        res.send(correspondants);
       }
     });
 });
@@ -109,25 +111,24 @@ io.on("connection", (socket) => {
   console.log("user connected", socket.id);
 
   socket.on("chat message", (msg) => {
-//    io.emit("chat message", msg);
+    //    io.emit("chat message", msg);
     console.log("msg", msg);
 
-
- const interMsg = {
-       content: msg.content,
+    const interMsg = {
+      content: msg.content,
       sender: msg.sender,
       reciver: msg.reciver,
       senderId: msg.senderId,
       reciverId: msg.reciverId,
       created_at: new Date(),
-seen: msg.seen  
-  };
+      seen: msg.seen,
+    };
 
- io.emit("chat message", interMsg);
+    io.emit("chat message", interMsg);
 
     let chatMessage = new communityChat(interMsg);
     chatMessage.save();
-//    io.emit("chat message", interMsg);
+    //    io.emit("chat message", interMsg);
   });
 });
 
